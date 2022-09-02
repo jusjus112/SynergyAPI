@@ -3,10 +3,10 @@
 </div>
 
 # Synergy Framework API
-<a href="https://www.jusjus.me/synergy">
+<a href="https://www.jusjus.me/synergy" target="_blank">
  <img src="https://img.shields.io/static/v1?label=Need%20more%20information&message=See%20Synergy%20website&color=%3CCOLOR%3E&style=for-the-badge" alt="synergy website">
 </a>
-<a href="https://www.jusjus.me/synergy">
+<a href="https://discord.gg/n7xb57G7Ur" target="_blank">
  <img src="https://img.shields.io/static/v1?label=Need%20support?&message=Join%20our%20discord&color=informational&style=for-the-badge&logo=discord" alt="synergy website">
 </a>
 <br><br>

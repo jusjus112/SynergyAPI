@@ -24,10 +24,16 @@ new SynergyAPIBuilder<>(this /*JavaPlugin*/)
 
 ## Documentation
 
-## Usefull links
+## Third Party Libraries Used
+- [Lombok](https://projectlombok.org/)
+- [GeyserMC MCProtocolLib](https://github.com/GeyserMC/MCProtocolLib)
+- [Google Guava](https://github.com/google/guava)
+- [HikariCP](https://github.com/brettwooldridge/HikariCP) (For SQL pooling)
 
-###MultiMap
+## Internal & Third party methods
+
+### MultiMap
 https://github.com/google/guava/wiki/NewCollectionTypesExplained#multimap <br>
 `Map<K, List<V>>` implementation that allows to store multiple values for a single key.
 
-###Docs
+### Docs

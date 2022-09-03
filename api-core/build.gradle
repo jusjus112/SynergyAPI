@@ -1,0 +1,5 @@
+description = "api-core"
+
+dependencies {
+    implementation group: 'com.zaxxer', name: 'HikariCP', version: '5.0.1' // HikariCP
+}

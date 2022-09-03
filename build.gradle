@@ -2,65 +2,57 @@ plugins {
     id 'java'
     id 'maven-publish'
     id 'eclipse'
+    id 'java-library'
     id "com.github.johnrengelman.shadow" version "7.1.2"
 }
 
-group 'usa.synergy.utilities'
-version '1.1.0'
-compileJava.options.encoding = 'UTF-8'
-
-// Remove the classifier from the jar
-shadowJar.archiveClassifier = null
-
-repositories {
-    mavenCentral()
-    mavenLocal()
-
-    maven { url "https://repo.papermc.io/repository/maven-public/" }
-    maven {
-        url 'https://jitpack.io'
-    }
-}
-
 allprojects {
+    group = "net.synergy.jusjus"
+    compileJava.options.encoding = 'UTF-8'
+
+    apply plugin: 'java'
+
     repositories {
+        mavenCentral()
+        mavenLocal()
+        gradlePluginPortal()
+
+        maven { url 'https://jitpack.io' }
         maven { url 'https://repo.opencollab.dev/maven-releases/' }
     }
 }
 
-dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+subprojects {
+    dependencies {
+        implementation "org.projectlombok:lombok:1.18.22"
+        annotationProcessor 'org.projectlombok:lombok:1.18.22'
 
-    annotationProcessor 'org.projectlombok:lombok:1.18.22'
-    compileOnly "org.projectlombok:lombok:1.18.22"
-    compileOnly("io.papermc.paper:paper-api:1.19-R0.1-SNAPSHOT")
+        implementation 'commons-io:commons-io:2.11.0' // Apache Commons IO
+        implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.8.1' // Apache utils
+    }
+
+//    task sourceJar(type: Jar) {
+//        from sourceSets.main.allJava
+//    }
+
+//    publishing {
+//        publications {
+//            mavenJava(MavenPublication) {
+//                from components.java
+//
+//                artifact sourceJar {
+//                    classifier "sources"
+//                }
+//            }
+//        }
+//    }
+}
+
+//    shadowJar.archiveClassifier = null
+
+//dependencies {
+//    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+//    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 
 //    implementation 'cloud.commandframework:cloud-bukkit:1.7.0'
-    compileOnly 'com.github.Steveice10:MCProtocolLib:1.19-1' // Player clients
-
-    // Google
-    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.8.1' // Apache utils
-    implementation 'commons-io:commons-io:2.11.0' // Apache Commons IO
-    implementation group: 'com.zaxxer', name: 'HikariCP', version: '5.0.1' // HikariCP
-}
-
-task sourceJar(type: Jar) {
-    from sourceSets.main.allJava
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-
-            artifact sourceJar {
-                classifier "sources"
-            }
-        }
-    }
-}
-
-test {
-    useJUnitPlatform()
-}
+//}

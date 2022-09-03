@@ -1,0 +1,5 @@
+description = "api-test"
+
+dependencies {
+    compileOnly 'com.github.Steveice10:MCProtocolLib:1.19-1' // Player clients
+}

@@ -1,2 +1,8 @@
-rootProject.name = 'SynergyUtilities'
+rootProject.name = 'SynergyAPI'
 
+include(':api-bukkit')
+include(':api-common')
+include(':api-proxy')
+include(':api-core')
+include(':api-utilities')
+include(':api-test')

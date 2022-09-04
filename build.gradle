@@ -11,6 +11,7 @@ allprojects {
     compileJava.options.encoding = 'UTF-8'
 
     apply plugin: 'java'
+    apply plugin: 'com.github.johnrengelman.shadow'
 
     repositories {
         mavenCentral()
@@ -20,39 +21,37 @@ allprojects {
         maven { url 'https://jitpack.io' }
         maven { url 'https://repo.opencollab.dev/maven-releases/' }
     }
+
+    shadowJar.archiveClassifier = null
 }
 
 subprojects {
     dependencies {
+        // Lombok
         implementation "org.projectlombok:lombok:1.18.22"
         annotationProcessor 'org.projectlombok:lombok:1.18.22'
 
+        // Utils
         implementation 'commons-io:commons-io:2.11.0' // Apache Commons IO
         implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.8.1' // Apache utils
+
+//        implementation 'cloud.commandframework:cloud-bukkit:1.7.0'
     }
-
-//    task sourceJar(type: Jar) {
-//        from sourceSets.main.allJava
-//    }
-
-//    publishing {
-//        publications {
-//            mavenJava(MavenPublication) {
-//                from components.java
-//
-//                artifact sourceJar {
-//                    classifier "sources"
-//                }
-//            }
-//        }
-//    }
 }
 
-//    shadowJar.archiveClassifier = null
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+}
 
-//dependencies {
-//    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-//    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+// Publishing to local maven repository to use in local projects
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
 
-//    implementation 'cloud.commandframework:cloud-bukkit:1.7.0'
-//}
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
+}

@@ -17,7 +17,7 @@ used for creating things like commands, events, database connections, user handl
 threading, dependency management, file providers and more. Making your life easier while coding a plugin for either any Spigot fork or any proxy.
 
 ## Adding as a Dependency
-MCProtocolLib builds are published to the [Open Collaboration repository]().
+Synergy API builds are published to the [Open Collaboration repository]().
 Follow the below steps to add Synergy as a dependency to your project. It can alsone be used as a standalone API rather than shading it in your project. See [Use as standalone](#use-as-standalone) for more information.
 ### Maven
 
@@ -68,8 +68,26 @@ new SynergyAPIBuilder<>(this /*JavaPlugin*/)
 ## Third Party Libraries Used and Shaded
 - [Lombok](https://projectlombok.org/)
 - [GeyserMC MCProtocolLib](https://github.com/GeyserMC/MCProtocolLib) (Stress testing with fake clients)
-- [Google Guava](https://github.com/google/guava)
 - [HikariCP](https://github.com/brettwooldridge/HikariCP) (For SQL pooling)
+- [Adventure](https://docs.adventure.kyori.net/getting-started.html) (Version controlled text & packet components)
+- [BStats](https://bstats.org/) (Plugin Metrics)
+
+[//]: # (https://github.com/lewysDavies/Java-Probability-Collection)
+[//]: # (https://github.com/MrIvanPlays/AnnotationConfig)
+
+### Other Libraries
+- [Google Guava](https://github.com/google/guava)
+- [Google Gson]()
+- [Google Zxing]()
+- [Apache Commons]()
+
+[//]: # (-     compile group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1')
+[//]: # (  compile group: 'com.google.inject', name: 'guice', version: '4.0' // INJECTION)
+[//]: # (  compile group: 'com.google.code.gson', name: 'gson', version: '2.3.1' // GSON)
+[//]: # (  compile group: 'com.google.zxing', name: 'core', version: '3.2.1')
+[//]: # (  compile group: 'com.google.guava', name: 'guava', version: 'r05' // Guava)
+[//]: # (  compile group: 'com.github.enerccio', name: 'gson-utilities', version: '1.1.0' // GSON Utility)
+[//]: # (implementation 'org.bstats:bstats-bukkit:3.0.0')
 
 ## Internal & Third party methods
 

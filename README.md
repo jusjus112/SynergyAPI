@@ -14,6 +14,8 @@ A framework API written for the Synergy Framework. Synergy API is a standalone A
 used for creating things like commands, events, database connections, user handling, 
 threading, dependency management, file providers and more. Making your life easier while coding a plugin for either any Spigot fork or any proxy.
 
+### !!! This API is highly in development and features are being added regularly and refactored until there has been a stable version.
+
 ## Enable the API in your project
 ```java
 // Get the API utilities with this instance and initialize some modules.

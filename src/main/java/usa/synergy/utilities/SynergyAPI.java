@@ -14,6 +14,7 @@ import usa.synergy.utilities.assets.file.FileController;
 import usa.synergy.utilities.assets.gui.impl.GuiManager;
 import usa.synergy.utilities.libraries.user.api.SynergyUser;
 import usa.synergy.utilities.libraries.user.impl.UserHandler;
+import usa.synergy.utilities.service.sql.DatabaseManager;
 import usa.synergy.utilities.service.threading.runnable.RunnableProvider;
 import usa.synergy.utilities.assets.version.VersionManager;
 import usa.synergy.utilities.libraries.PluginLoader;
@@ -31,6 +32,7 @@ public class SynergyAPI<A extends JavaPlugin> extends PluginLoader<A>{
   private final VersionManager versionManager;
   private static RunnableProvider<?> runnableProvider;
   private final FileController fileController;
+  private final DatabaseManager databaseManager;
 
   // New APIS
   private final CooldownManager<A> cooldownManager;
@@ -40,7 +42,10 @@ public class SynergyAPI<A extends JavaPlugin> extends PluginLoader<A>{
   // Setters for APIs and modules that support custom implementations
   private final UserHandler<A, ? extends SynergyUser<? extends Player>> userProvider;
 
-  public SynergyAPI(A javaPlugin, UserHandler<A, ? extends SynergyUser<? extends Player>> userProvider) {
+  public SynergyAPI(A javaPlugin,
+      UserHandler<A, ? extends SynergyUser<? extends Player>> userProvider,
+      DatabaseManager databaseManager
+  ) {
     super(javaPlugin);
 
     // Support the old API
@@ -52,6 +57,7 @@ public class SynergyAPI<A extends JavaPlugin> extends PluginLoader<A>{
 
     // Initialize the runner
     runnableProvider = new RunnableProvider<>(javaPlugin);
+    this.databaseManager = databaseManager;
 
     // Initialize the modules
     this.guiManager = new GuiManager(javaPlugin);

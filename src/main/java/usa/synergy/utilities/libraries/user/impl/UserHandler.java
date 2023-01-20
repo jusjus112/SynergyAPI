@@ -6,9 +6,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import usa.synergy.utilities.Module;
+import usa.synergy.utilities.libraries.UserLoadProvider;
 import usa.synergy.utilities.libraries.user.api.SynergyUser;
 
-public class UserHandler<A extends JavaPlugin, U extends SynergyUser<? extends Player>> extends Module<A> {
+public class UserHandler<A extends JavaPlugin, U extends SynergyUser<? extends Player>> extends Module<A> implements
+    UserLoadProvider<U> {
 
   private final ConcurrentHashMap<UUID, U> users;
 
@@ -41,4 +43,13 @@ public class UserHandler<A extends JavaPlugin, U extends SynergyUser<? extends P
     return Optional.ofNullable(this.users.get(uuid));
   }
 
+  @Override
+  public void onUserLoad(U user) {
+    this.register(user);
+  }
+
+  @Override
+  public void onUserUnLoad(U user) {
+    this.users.remove(user.getUUID());
+  }
 }

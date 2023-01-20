@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.configuration.file.FileConfiguration;
+import usa.synergy.utilities.utlities.SynergyLogger;
 
 @Deprecated
 public class SQLService {
@@ -23,7 +24,7 @@ public class SQLService {
 
   private static HikariDataSource dataSource1, dataSource2;
 
-  public SQLService(String host, String databaseName, int port, String user, String password) {
+  private SQLService(String host, String databaseName, int port, String user, String password) {
     HOST = host;
     DATABASE_NAME = databaseName;
     PORT = port;
@@ -31,7 +32,7 @@ public class SQLService {
     PASSWORD = password;
   }
 
-  public SQLService(){
+  private SQLService(){
     try (OutputStream output = new FileOutputStream("sql.properties")) {
 
       Properties prop = new Properties();
@@ -45,9 +46,18 @@ public class SQLService {
 
       // save properties to project root folder
       prop.store(output, null);
+      SynergyLogger.info("SQL properties loaded.");
     } catch (IOException io) {
       io.printStackTrace();
     }
+  }
+
+  public static SQLService fromProperties(){
+    return new SQLService();
+  }
+
+  public static SQLService fromFile(String file){
+    return null;
   }
 
   public SQLService(FileConfiguration fileConfiguration) {

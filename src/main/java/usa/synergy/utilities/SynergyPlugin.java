@@ -8,7 +8,7 @@ import usa.synergy.utilities.libraries.user.impl.UserHandler;
 
 public abstract class SynergyPlugin<A extends JavaPlugin> extends PluginLoader<A> {
 
-  public SynergyPlugin(A loader) {
+  protected SynergyPlugin(A loader) {
     super(loader);
   }
 

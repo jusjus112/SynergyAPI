@@ -18,7 +18,7 @@ public abstract class Module<A extends JavaPlugin> extends PluginLoader<A> imple
   private boolean disabled;
   private final List<Listener> listeners;
 
-  public Module(A plugin, String name) {
+  protected Module(A plugin, String name) {
     super(plugin);
 
     this.name = name;
@@ -26,6 +26,10 @@ public abstract class Module<A extends JavaPlugin> extends PluginLoader<A> imple
     this.listeners = Lists.newArrayList();
 
     getLoader().getServer().getPluginManager().registerEvents(this, getLoader());
+  }
+
+  protected Module(A plugin) {
+    this(plugin, plugin.getName());
   }
 
   public void registerListener(Listener... listeners) {

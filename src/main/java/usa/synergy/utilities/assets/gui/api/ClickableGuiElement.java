@@ -6,6 +6,6 @@ import usa.synergy.utilities.assets.gui.impl.Gui;
 
 public abstract class ClickableGuiElement extends GuiElement {
 
-  public abstract void click(Player player, ClickType clickType, Gui gui);
+  public abstract boolean click(Player player, ClickType clickType, Gui gui);
 
 }

@@ -5,7 +5,11 @@ import java.util.List;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 import usa.synergy.utilities.Module;
+import usa.synergy.utilities.assets.JSONFile;
+import usa.synergy.utilities.assets.PropertiesFile;
 import usa.synergy.utilities.assets.YMLFile;
+import usa.synergy.utilities.libraries.files.SynergyFile;
+import usa.synergy.utilities.utlities.SynergyLogger;
 
 @Getter
 public class FileController extends Module {
@@ -35,19 +39,36 @@ public class FileController extends Module {
    * @return if there were no errors while reloading.
    */
   public boolean reloadAll() {
-    boolean allReloaded = true;
+    return reloadAll(YMLFile.class, JSONFile.class, PropertiesFile.class);
+  }
+
+  /**
+   * Reloading all the registered files in this controller.
+   * Will only reload the files that are of the specified type.
+   * Will let the logger know if there were any problems.
+   *
+   * @param classes the classes that need to be reloaded.
+   * @return if there were no errors while reloading.
+   */
+  @SafeVarargs
+  public final boolean reloadAll(Class<? extends SynergyFile>... classes){
+    boolean reloaded = true;
 
     for (YMLFile file : getFiles()) {
-      try{
-        file.reload();
-        getLoader().getSLF4JLogger().info(file.getFile().getName() + " Reloaded");
-      }catch (Exception exception){
-        getLoader().getSLF4JLogger().info("Error while reloading " + file.getFile().getName());
-        exception.printStackTrace();
-        return false;
+      for (Class<? extends SynergyFile> clazz : classes) {
+        if(file.getClass().equals(clazz)){
+          try{
+            file.reload();
+            SynergyLogger.info(file.getFile().getName() + " Reloaded");
+          }catch (Exception exception){
+            SynergyLogger.error("Error while reloading " + file.getFile().getName());
+            SynergyLogger.error(exception.getMessage());
+            return false;
+          }
+        }
       }
     }
 
-    return allReloaded;
+    return reloaded;
   }
 }

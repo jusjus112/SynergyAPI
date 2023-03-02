@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,7 +13,11 @@ import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetFactory;
 import javax.sql.rowset.RowSetProvider;
 import lombok.Getter;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
+import usa.synergy.utilities.SynergyAPI;
 import usa.synergy.utilities.service.SQLService;
+import usa.synergy.utilities.utlities.SynergyLogger;
 
 @Getter
 @Deprecated
@@ -25,9 +30,24 @@ public class DatabaseManager {
    * https://stackoverflow.com/questions/34117164/java-async-mysql-queries
    */
 
+  private final SQLService sqlService;
 
-  public DatabaseManager(SQLService service) {
+  public DatabaseManager(SQLService service, JavaPlugin plugin) {
+    this.sqlService = service;
 
+    try {
+      SynergyLogger.info("Trying to connect to SQL...");
+
+      // Testing the SQL connection with hikari
+      service.testConnection();
+    } catch (Throwable throwable) {
+      SynergyLogger.error("Could not connect to your SQL provider. See error.");
+      SynergyLogger.error(throwable.getMessage());
+      SynergyLogger.error("All plugins that use SQL will be disabled.");
+      SynergyLogger.error("You need to restart your server to try again.");
+      SynergyLogger.error("Do not use /reload, or a restart plugin because things might not work.");
+//      Bukkit.getPluginManager().disablePlugin(plugin);
+    }
   }
 
   public boolean update(String table, Map<String, Object> data, Map<String, Object> whereData) {
@@ -175,7 +195,18 @@ public class DatabaseManager {
   }
 
   public boolean insert(String table, Map<String, Object> data) {
-    return execute("INSERT INTO", table, data, true);
+    return execute("INSERT INTO", table, data);
+  }
+
+  public boolean insertOrUpdate(String table, Map<String, Object> data) {
+    return insertOrUpdate(table, data, data);
+  }
+
+  public boolean insertOrUpdate(String table, Map<String, Object> data, Map<String, Object> whereData) {
+    if (!execute("INSERT INTO", table, data)){
+      return update(table, data, whereData);
+    }
+    return false;
   }
 
   public boolean remove(String table, Map<String, Object> whereData) {
@@ -222,7 +253,7 @@ public class DatabaseManager {
     }
   }
 
-  public boolean execute(String prefix, String table, Map<String, Object> data, boolean insert) {
+  public boolean execute(String prefix, String table, Map<String, Object> data) {
     HashMap<Integer, Object> indexed = new HashMap<>();
     try {
       StringBuilder query = new StringBuilder(prefix + " " + table + " ("),
@@ -253,8 +284,8 @@ public class DatabaseManager {
         for (Integer index : indexed.keySet()) {
           Object value = indexed.get(index);
 
-          if (value instanceof InputStream) {
-            preparedStatement.setBinaryStream(index, (InputStream) value);
+          if (value instanceof InputStream inputStream) {
+            preparedStatement.setBinaryStream(index, inputStream);
             continue;
           }
           preparedStatement.setObject(index, value);

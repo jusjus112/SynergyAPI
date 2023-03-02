@@ -34,10 +34,10 @@ dependencies {
 
     annotationProcessor 'org.projectlombok:lombok:1.18.22'
     compileOnly "org.projectlombok:lombok:1.18.22"
-    compileOnly("io.papermc.paper:paper-api:1.19-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.19.3-R0.1-SNAPSHOT")
 
 //    implementation 'cloud.commandframework:cloud-bukkit:1.7.0'
-    compileOnly 'com.github.Steveice10:MCProtocolLib:1.19-1' // Player clients
+//    compileOnly 'com.github.Steveice10:MCProtocolLib:1.19-1' // Player clients
 
     // Google
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.8.1' // Apache utils

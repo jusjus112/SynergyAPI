@@ -3,14 +3,12 @@ package usa.synergy.utilities.assets.events;
 import lombok.Getter;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import usa.synergy.utilities.libraries.PluginLoader;
 
 @Getter
-public abstract class SynergyListener implements Listener {
+public abstract class SynergyListener<A extends JavaPlugin> extends PluginLoader<A> implements Listener{
 
-  private final JavaPlugin plugin;
-
-  public SynergyListener(JavaPlugin plugin) {
-    this.plugin = plugin;
+  public SynergyListener(A loader) {
+    super(loader);
   }
-
 }

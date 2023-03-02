@@ -14,6 +14,7 @@ import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import usa.synergy.utilities.Module;
@@ -23,6 +24,7 @@ import usa.synergy.utilities.assets.gui.api.GuiInteract;
 import usa.synergy.utilities.assets.gui.api.GuiInteractElement;
 import usa.synergy.utilities.assets.gui.api.InteractItem;
 import usa.synergy.utilities.assets.gui.api.MenuInventoryHolder;
+import usa.synergy.utilities.utlities.SynergyLogger;
 
 public class GuiManager extends Module {
 
@@ -38,9 +40,9 @@ public class GuiManager extends Module {
     InventoryView view = event.getView();
     Inventory topInventory = view.getTopInventory();
 
-    if (topInventory.getHolder() instanceof MenuInventoryHolder) {
-      MenuInventoryHolder holder = (MenuInventoryHolder) topInventory.getHolder();
+    if (topInventory.getHolder() instanceof MenuInventoryHolder holder) {
       Gui menu = holder.getMenu();
+      SynergyLogger.debug("GUIMANAGER CLICK 1");
       if (event.getRawSlot() == event.getSlot()) {
         int slot = event.getSlot();
 
@@ -64,36 +66,43 @@ public class GuiManager extends Module {
             return;
           }
         }
-
+        SynergyLogger.debug("GUIMANAGER CLICK 2");
         GuiElement item = menu.getElement(slot);
 
         if (item == null && holder.getPaginatedItems() != null) {
           item = holder.getPaginatedItems().get(slot);
         }
-
+        SynergyLogger.debug("GUIMANAGER CLICK 3");
         boolean onInsert = menu.onInsert(event.getCurrentItem(), topInventory);
 
         if (item != null) {
 //          if (item instanceof GuiElement) {
             if (onInsert) {
+              SynergyLogger.debug("GUIMANAGER CLICK 4");
               event.setCancelled(false);
             } else {
+              SynergyLogger.debug("GUIMANAGER CLICK 5");
               event.setCancelled((event.getRawSlot() == event.getSlot() || event.isShiftClick()
                   || event.getClick() == ClickType.DOUBLE_CLICK));
             }
 //          }
           menu.setIgnoringParent(true);
           if (item instanceof ClickableGuiElement) {
-            ((ClickableGuiElement) item).click(holder.getViewer(), event.getClick(), menu);
+            SynergyLogger.debug("GUIMANAGER CLICK 6");
+            event.setCancelled(((ClickableGuiElement) item).click(holder.getViewer(), event.getClick(), menu));
           }
+          SynergyLogger.debug("GUIMANAGER CLICK 6 - 1");
           menu.setIgnoringParent(false);
         } else {
+          SynergyLogger.debug("GUIMANAGER CLICK 7");
           event.setCancelled(!onInsert);
         }
       } else {
+        SynergyLogger.debug("GUIMANAGER CLICK 8");
         if (menu.onInsert(event.getCurrentItem(), topInventory)) {
           event.setCancelled(false);
         } else {
+          SynergyLogger.debug("GUIMANAGER CLICK 9");
           event.setCancelled((event.getRawSlot() == event.getSlot() || event.isShiftClick()
               || event.getClick() == ClickType.DOUBLE_CLICK));
         }
@@ -103,15 +112,15 @@ public class GuiManager extends Module {
 
   @EventHandler
   public void on(InventoryDragEvent event) {
-    if (event.getInventory().getHolder() instanceof MenuInventoryHolder) {
-//			Synergy.debug("GUIMANAGER DRAG 2");
+    if (event.getInventory().getHolder() instanceof MenuInventoryHolder menuInventoryHolder) {
+      SynergyLogger.debug("GUIMANAGER DRAG 2");
       if (event.getOldCursor() != null) {
         if (event.getInventory() == event.getView().getTopInventory()) {
-          Gui gui = ((MenuInventoryHolder) event.getInventory().getHolder()).getMenu();
-//					Synergy.debug("GUIMANAGER DRAG 3");
+          Gui gui = menuInventoryHolder.getMenu();
+          SynergyLogger.debug("GUIMANAGER DRAG 3");
           boolean onInsert = gui.onInsert(event.getOldCursor(), event.getInventory());
           event.setCancelled(!onInsert);
-//					Synergy.debug(onInsert + " = GUIMANAGER DRAG 4");
+          SynergyLogger.debug(onInsert + " = GUIMANAGER DRAG 4");
         }
       }
     }
@@ -120,11 +129,11 @@ public class GuiManager extends Module {
   @EventHandler
   public void on(InventoryMoveItemEvent event) {
     Inventory destination = event.getDestination();
-//		Synergy.debug("ON INSERT GUI 1");
+		SynergyLogger.debug("ON INSERT GUI 1");
     if (destination instanceof Gui) {
       boolean onInsert = ((Gui) destination).onInsert(event.getItem(), destination);
-//			Synergy.debug("ON INSERT GUI 2");
-//			Synergy.debug(onInsert + " = ON INSERT GUI 2");
+      SynergyLogger.debug("ON INSERT GUI 2");
+      SynergyLogger.debug(onInsert + " = ON INSERT GUI 2");
       event.setCancelled(!onInsert);
       event.setItem(onInsert ? event.getItem() : null);
     }
@@ -170,9 +179,17 @@ public class GuiManager extends Module {
   public void onItemInteract(PlayerInteractEvent e) {
     if (e.getAction() != Action.PHYSICAL) {
       for (InteractItem interactItem : InteractItem.getInteractItems()) {
-        if (interactItem.isSimilar(e.getItem())) {
+        ItemStack itemStack = e.getItem();
+        ItemStack filler = interactItem;
+
+        if (itemStack == null){
+          continue;
+        }
+
+        if (itemStack.getType() == filler.getType() && itemStack.hasItemMeta() && filler.hasItemMeta() &&
+            itemStack.getItemMeta().getDisplayName().equalsIgnoreCase(filler.getItemMeta().getDisplayName())) {
           e.setCancelled(true);
-          InteractItem.getInteractItems().remove(interactItem);
+
           interactItem.onClick(e.getPlayer(), e.getAction());
           break;
         }

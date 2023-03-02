@@ -7,6 +7,8 @@ import usa.synergy.utilities.assets.YMLFile;
 @Getter
 public class LanguageFile {
 
+    // https://docs.oracle.com/javase/tutorial/i18n/resbundle/propfile.html
+
     private LanguageCountry key;
     private YMLFile file;
     private String name;

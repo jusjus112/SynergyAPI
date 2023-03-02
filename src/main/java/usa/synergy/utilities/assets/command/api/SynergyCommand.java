@@ -100,7 +100,13 @@ public abstract class SynergyCommand extends Command {
   public void onGenericExecute(CommandSender sender, Command command, String[] args) {
   }
 
-//    public void sendUsageMessage(Player player) {
+  @Override
+  public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias,
+      @NotNull String[] args) throws IllegalArgumentException {
+    return super.tabComplete(sender, alias, args);
+  }
+
+  //    public void sendUsageMessage(Player player) {
 //        String usageString = "";
 //
 //        if(playerUsage.length != 0) {

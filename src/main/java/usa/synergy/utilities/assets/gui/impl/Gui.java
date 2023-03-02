@@ -1,8 +1,10 @@
 package usa.synergy.utilities.assets.gui.impl;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -10,8 +12,9 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
+import javax.annotation.Nullable;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.Material;
@@ -30,15 +33,18 @@ import usa.synergy.utilities.assets.gui.api.MenuInventoryHolder;
 import usa.synergy.utilities.assets.utilities.ItemBuilder;
 import usa.synergy.utilities.assets.utilities.SkullItemBuilder;
 import usa.synergy.utilities.assets.utilities.UtilString;
+import usa.synergy.utilities.libraries.user.api.SynergyUser;
+import usa.synergy.utilities.utlities.SynergyLogger;
 
 public abstract class Gui {
 
   @Getter
-  private final JavaPlugin plugin;
-  private final String name;
-  private final GuiSize guiSize;
-  private final Map<Integer, GuiElement> elements;
-  private final Map<UUID, Inventory> currentSessions;
+  private JavaPlugin plugin;
+  private String name;
+  @Getter
+  private GuiSize guiSize;
+  private Map<Integer, GuiElement> elements;
+  private Map<UUID, Inventory> currentSessions;
   @Getter
   private Gui parent = null;
   @Setter
@@ -57,9 +63,19 @@ public abstract class Gui {
     this.currentSessions = Maps.newHashMap();
     this.ignoringParent = false;
 
-		if (setup) {
-			setup();
-		}
+//		if (setup) {
+//			setup();
+//		}
+  }
+
+  public Gui(Gui gui){
+    this(gui.plugin, gui.name, gui.guiSize, false);
+
+    plugin = gui.plugin;
+    elements = gui.elements;
+    currentSessions = gui.currentSessions;
+    parent = gui.parent;
+    ignoringParent = gui.ignoringParent;
   }
 
 //  public static GuiElement guiElementFromConfig(String prefix, ConfigurationSection configurationSection,
@@ -93,62 +109,153 @@ public abstract class Gui {
     };
   }
 
-  public static Gui fromBukkitFileConfiguration(JavaPlugin plugin, FileConfiguration fileConfiguration,
+  /**
+   *
+   * @param plugin The plugin that owns this gui.
+   * @param fileConfiguration The configuration file to load the gui from.
+   * @param itemClick The function to run when an item is clicked.
+   * @param lineEditor Pair(Left = Player / Right = config prefix), Lore line from item
+   * @return The gui that was loaded.
+   */
+  @Nullable
+  public static <G extends Gui> G fromBukkitFileConfiguration(@NonNull Class<? extends G> g, JavaPlugin plugin, FileConfiguration fileConfiguration,
       BiConsumer<Pair<String, FileConfiguration>, Player> itemClick, BiFunction<Pair<Player, String>, String, String> lineEditor) {
     String name = fileConfiguration.getString("name");
     GuiSize guiSize = GuiSize.fromNumber(fileConfiguration.getInt("size")).orElse(GuiSize.ONE_ROW);
 
-    Validate.notNull(name, "GUI Name cannot be empty or wrong.");
+    Validate.notNull(name, "GUI Name cannot be empty.");
     Validate.notNull(guiSize, "GUI Size cannot be 0 or null.");
 
-    return new Gui(plugin, name, guiSize) {
-      @Override
-      public void setup() {
-        if (fileConfiguration.contains("items")) {
-          fileConfiguration.getConfigurationSection("items").getKeys(false).forEach(slot -> {
-            try {
-              if (Integer.parseInt(slot) >= 0) {
-                String prefix = "items." + slot;
+    try {
+      return g.getDeclaredConstructor(JavaPlugin.class, String.class, GuiSize.class)
+          .newInstance(plugin, name, guiSize);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
 
-                addElement(Integer.parseInt(slot), new ClickableGuiElement() {
-                  @Override
-                  public ItemStack getIcon(Player player) {
-                    return ItemBuilder.fromConfig(player, prefix, fileConfiguration, (material, s) ->
-                        lineEditor.apply(new Pair<>(player, prefix), s)).build();
-                  }
-
-                  @Override
-                  public void click(Player player, ClickType clickType, Gui gui) {
-                    itemClick.accept(new Pair<>(prefix, fileConfiguration), player);
-                  }
-                });
-              } else {
-                //TODO: Section is null
-                getPlugin().getSLF4JLogger().error("Section item is null for " + slot);
-              }
-            } catch (NumberFormatException exception) {
-              exception.printStackTrace();
-            }
-          });
-        }
-      }
-    };
+    return null;
   }
 
-  public abstract void setup();
+  /**
+   *
+   * @param plugin The plugin that owns this gui.
+   * @param fileConfiguration The configuration file to load the gui from.
+   * @param itemClick The function to run when an item is clicked.
+   * @param lineEditor Pair(Left = Player / Right = config prefix), Lore line from item
+   * @return The gui that was loaded.
+   */
+  public Gui(
+      JavaPlugin plugin,
+      FileConfiguration fileConfiguration,
+      BiConsumer<Pair<String, FileConfiguration>, Player> itemClick,
+      BiFunction<Pair<Player, String>, String, String> lineEditor,
+      BiFunction<Player, ItemBuilder, ItemBuilder> itemBuilderFunction
+  ) {
+    this(plugin, fileConfiguration.getString("name"), GuiSize.fromNumber(fileConfiguration.getInt("size")).orElse(GuiSize.ONE_ROW), true);
+
+    if (fileConfiguration.contains("items")) {
+      fileConfiguration.getConfigurationSection("items").getKeys(false).forEach(slot -> {
+        try {
+          if (Integer.parseInt(slot) >= 0) {
+            String prefix = "items." + slot;
+
+            boolean clickable = fileConfiguration.getBoolean(prefix + ".clickable", true);
+            List<String> duplicates = Lists.newArrayList(fileConfiguration.getStringList(prefix + ".duplicates"));
+            duplicates.add(slot);
+
+            for (String duplicate : duplicates) {
+              try{
+                int duplicateSlot = Integer.parseInt(duplicate);
+
+                SynergyLogger.debug("Item " + prefix + " is clickable: " + clickable + "");
+
+                if (!clickable){
+                  addElement(duplicateSlot, new GuiElement() {
+                    @Override
+                    public ItemStack getIcon(Player player) {
+                      ItemBuilder itemBuilder = ItemBuilder.fromConfig(player, prefix, fileConfiguration, (material, s) ->
+                          lineEditor.apply(new Pair<>(player, prefix), s));
+
+                      return itemBuilderFunction.apply(player, itemBuilder).build();
+                    }
+                  });
+                }else {
+
+                  addElement(duplicateSlot, new ClickableGuiElement() {
+                    @Override
+                    public ItemStack getIcon(Player player) {
+                      ItemBuilder itemBuilder = ItemBuilder.fromConfig(player, prefix,
+                          fileConfiguration, (material, s) ->
+                              lineEditor.apply(new Pair<>(player, prefix), s));
+
+                      return itemBuilderFunction.apply(player, itemBuilder).build();
+                    }
+
+                    @Override
+                    public boolean click(Player player, ClickType clickType, Gui gui) {
+                      itemClick.accept(new Pair<>(prefix, fileConfiguration), player);
+                      return true;
+                    }
+                  });
+                }
+              } catch (NumberFormatException e){
+                SynergyLogger.error("Duplicate slot is not a number: " + duplicate);
+              }
+            }
+          } else {
+            //TODO: Section is null
+            getPlugin().getSLF4JLogger().error("Section item is null for " + slot);
+          }
+        } catch (Exception exception) {
+          SynergyLogger.error("Error generating gui item " + slot, exception.getMessage());
+        }
+      });
+    }
+  }
+
+  public static HashMap<String, Object> getDefaultConfigData() {
+    return new HashMap<>() {{
+      put("name", "&6&lInventory Name");
+      put("size", 18);
+      put("items", new HashMap<>() {{
+        put(0, new HashMap<>() {{
+          put("material", Material.DIAMOND.name());
+          put("name", "&e&lThis is a default diamond name.");
+          put("model", 32);
+          put("duplicates", 123);
+          put("lore", Lists.newArrayList("This is an example", "lore on this diamond."));
+          put("commands", Lists.newArrayList("give %player% minecraft:diamond 1"));
+        }});
+        put(1, new HashMap<>() {{
+          put("material", Material.BAKED_POTATO.name());
+          put("name", "&e&lThis is a default potato name.");
+          put("model", 0);
+          put("lore", Lists.newArrayList("This is an example", "lore on this baked potato."));
+          put("commands", Lists.newArrayList("goto example"));
+        }});
+      }});
+    }};
+  }
+
+  public void setup(Player player){
+    setup();
+  }
+  public void setup(){}
 
   public boolean onClose(Inventory inventory, Player player) {
     return true;
   }
 
-  public boolean onInsert(ItemStack itemStack, Inventory inventory) {
-    return false;
-  }
+  public abstract boolean onInsert(ItemStack itemStack, Inventory inventory);
 
   public void insert(Inventory inventory, Player player) {
     for (Entry<Integer, GuiElement> element : elements.entrySet()) {
       inventory.setItem(element.getKey(), element.getValue().getIcon(player));
     }
+  }
+
+  public final void open(SynergyUser<?> user) {
+    user.getPlayer().ifPresent(this::open);
   }
 
   /**
@@ -160,7 +267,10 @@ public abstract class Gui {
   public final void open(Player player) {
     MenuInventoryHolder inventoryHolder = new MenuInventoryHolder(player, this);
     Inventory inventory = plugin.getServer()
-        .createInventory(inventoryHolder, guiSize.getSlots(), UtilString.toBukkitColors(name));
+        .createInventory(inventoryHolder, getGuiSize().getSlots(), UtilString.toBukkitColors(name));
+
+    // TODO: Might remove this
+    setup(player);
 
     inventoryHolder.setInventory(inventory);
     setItems(inventory, player);
@@ -182,7 +292,7 @@ public abstract class Gui {
     this.ignoringParent = false;
     elements.clear();
 
-    setup();
+    setup(player);
     setItems(inventory, player);
   }
 
@@ -244,10 +354,11 @@ public abstract class Gui {
       }
 
       @Override
-      public void click(Player player, ClickType clickType, Gui gui) {
+      public boolean click(Player player, ClickType clickType, Gui gui) {
 				if (hasParent()) {
 					parent.open(player);
 				}
+        return false;
       }
     };
   }
@@ -367,6 +478,10 @@ public abstract class Gui {
 
   public void removeElement(int slot) {
     this.elements.remove(slot);
+  }
+
+  public void removeAllElements(){
+    this.elements.clear();
   }
 
   public GuiElement getElement(int slot) {

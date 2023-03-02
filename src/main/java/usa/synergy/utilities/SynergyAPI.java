@@ -20,6 +20,7 @@ import usa.synergy.utilities.assets.version.VersionManager;
 import usa.synergy.utilities.libraries.PluginLoader;
 import usa.synergy.utilities.libraries.dependency.DependencyProvider;
 import usa.synergy.utilities.libraries.files.FileProvider;
+import usa.synergy.utilities.utlities.SynergyLogger;
 
 @Getter
 public class SynergyAPI<A extends JavaPlugin> extends PluginLoader<A>{
@@ -52,6 +53,7 @@ public class SynergyAPI<A extends JavaPlugin> extends PluginLoader<A>{
     instance = this;
 
     // Show the logo and information, because it's epic.
+    SynergyLogger.info("Using SynergyAPI v" + javaPlugin.getDescription().getVersion());
 //    Logo.display();
 //    Logo.showInformation();
 

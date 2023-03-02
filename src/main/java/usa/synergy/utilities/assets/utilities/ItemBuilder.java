@@ -2,7 +2,9 @@ package usa.synergy.utilities.assets.utilities;
 
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -16,8 +18,10 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
+import org.jetbrains.annotations.Nullable;
+import usa.synergy.utilities.utlities.SynergyLogger;
 
-public class ItemBuilder extends ItemStack {
+public class ItemBuilder<I extends ItemBuilder> extends ItemStack {
 
   public ItemMeta itemMeta;
   @Getter
@@ -45,22 +49,41 @@ public class ItemBuilder extends ItemStack {
     this(material, amount, (byte) 0);
   }
 
+  public ItemBuilder(ItemBuilder itemBuilder){
+    this(itemBuilder.build());
+  }
+
   public ItemBuilder(final Material material, final int amount, final short damage) {
     super(material, amount, damage);
   }
 
-  public static ItemBuilder fromConfig(Player player, String prefix, ConfigurationSection fileConfiguration) {
+  public static HashMap<String, Object> getDefaultConfigData(String prefix) {
+    return new HashMap<>() {{
+      put(prefix+".material", Material.STONE.name());
+      put(prefix+".name", "&cDefault Name");
+      put(prefix+".lore", Lists.newArrayList("&cDefault Lore"));
+      put(prefix+".glow", false);
+      put(prefix+".model", 0);
+      put(prefix+".hideFlags", false);
+      put(prefix+".enchantments", Map.of());
+    }};
+  }
+
+  public static ItemBuilder fromConfig(@Nullable Player player, String prefix, ConfigurationSection fileConfiguration) {
     return fromConfig(player, prefix, fileConfiguration, (material, s) -> s);
   }
 
-  public static ItemBuilder fromConfig(Player player, String prefix, ConfigurationSection fileConfiguration, BiFunction<Material, String, String> editor) {
+  public static ItemBuilder fromConfig(@Nullable Player player, String prefix, ConfigurationSection fileConfiguration, BiFunction<Material, String, String> editor) {
     try {
       String materialString = fileConfiguration.getString(prefix + ".material");
       ItemBuilder itemBuilder;
 
       if (materialString != null && materialString.contains("head")) {
-        String name = materialString.split(":")[1];
-        String username = name.replaceAll("%player%", player.getName());
+        String username = "";
+        if (player != null) {
+          String name = materialString.split(":")[1];
+          username = name.replaceAll("%player%", player.getName());
+        }
 
         itemBuilder = new SkullItemBuilder(username);
       }else{
@@ -72,24 +95,34 @@ public class ItemBuilder extends ItemStack {
       boolean glow = fileConfiguration.getBoolean(prefix + ".glow", false);
       boolean hideFlags = fileConfiguration.getBoolean(prefix + ".hideFlags", false);
 
-      itemBuilder.setName(name).addLore(s -> editor.apply(itemBuilder.getType(), s), lore);
+      itemBuilder.setName(name).addLore(s -> editor.apply(itemBuilder.getType(), (String) s), lore);
       if(!(itemBuilder instanceof SkullItemBuilder) && glow) itemBuilder.glow();
       if(!(itemBuilder instanceof SkullItemBuilder) && hideFlags) itemBuilder.hideFlags();
+
+      int modelData = fileConfiguration.getInt(prefix + ".model", 0);
+      if (modelData != -1) {
+        itemBuilder.setModelData(modelData);
+      }
 
       if (fileConfiguration.contains(prefix + ".enchantments")){
         ConfigurationSection enchantments = fileConfiguration.getConfigurationSection(prefix + ".enchantments");
         if (enchantments != null){
           for (String enchantment : enchantments.getKeys(false)){
-            String[] splitter = enchantment.split(":");
-            itemBuilder.addEnchantment(Enchantment.getByName(splitter[0]), enchantments.getInt(splitter[1]));
+            if (enchantment != null) {
+              int level = enchantments.getInt(enchantment);
+              itemBuilder.addUnsafeEnchantment(Enchantment.getByName(enchantment), level);
+            }
           }
         }
       }
 
       return itemBuilder;
     } catch (Exception exception) {
-      exception.printStackTrace();
-      System.out.println("Using prefix: " + prefix + " .material");
+      SynergyLogger.error(
+          "Error while generating an item from config.",
+          "For item with prefix: " + prefix,
+          exception.getMessage()
+      );
     }
 
     return new ItemBuilder(Material.AIR);
@@ -178,6 +211,12 @@ public class ItemBuilder extends ItemStack {
   public ItemBuilder hideEnchants() {
     initItemMeta();
     this.itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+    return this;
+  }
+
+  public ItemBuilder setModelData(int modelData) {
+    initItemMeta();
+    this.itemMeta.setCustomModelData(modelData);
     return this;
   }
 

@@ -24,11 +24,15 @@ public class SynergyAPIBuilder<A extends JavaPlugin> extends PluginLoader<A> {
 
   @Deprecated
   public <U extends SynergyUser<? extends Player>> SynergyAPIBuilder<A> databaseProvider(SQLService sqlService){
-    this.databaseManager = new DatabaseManager(sqlService);
+    this.databaseManager = new DatabaseManager(sqlService, getLoader());
     return this;
   }
 
   public SynergyAPI<A> buildAPI() {
+    if (!getLoader().isEnabled()){
+      getLoader().getPluginLoader().disablePlugin(getLoader());
+      return null;
+    }
     return new SynergyAPI<>(
         getLoader(),
         userProvider == null ? new UserHandler<A, SynergyUser<Player>>(getLoader()) : userProvider,

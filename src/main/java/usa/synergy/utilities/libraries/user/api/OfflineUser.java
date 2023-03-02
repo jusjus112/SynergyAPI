@@ -1,11 +1,13 @@
 package usa.synergy.utilities.libraries.user.api;
 
+import java.io.InputStream;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import usa.synergy.utilities.libraries.database.sql.annotations.SQLField;
+import usa.synergy.utilities.service.sql.UtilSQL;
 
 @RequiredArgsConstructor
 @Getter
@@ -28,5 +30,9 @@ public abstract class OfflineUser {
    */
   @SQLField
   private final String name;
+
+  public InputStream getUUIDStream(){
+    return UtilSQL.convertUniqueId(this.UUID);
+  }
 
 }

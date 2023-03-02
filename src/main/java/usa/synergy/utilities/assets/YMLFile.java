@@ -9,9 +9,10 @@ import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import usa.synergy.utilities.SynergyAPI;
+import usa.synergy.utilities.libraries.files.SynergyFile;
 
 @Deprecated
-public class YMLFile {
+public class YMLFile extends SynergyFile {
 
   private final String dataFolder;
   private final String name;

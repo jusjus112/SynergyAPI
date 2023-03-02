@@ -2,20 +2,28 @@ package usa.synergy.utilities.service;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
+import usa.synergy.utilities.assets.PropertiesFile;
+import usa.synergy.utilities.service.sql.SynergySQLException;
 import usa.synergy.utilities.utlities.SynergyLogger;
 
 @Deprecated
 public class SQLService {
 
   public static String DATABASE_NAME;
+  public static String JDBC_URL;
   private static String HOST;
   private static String USERNAME;
   private static String PASSWORD;
@@ -23,6 +31,7 @@ public class SQLService {
   private static String PROPERTIES_FILE_PATH = null;
 
   private static HikariDataSource dataSource1, dataSource2;
+  private static Properties properties;
 
   private SQLService(String host, String databaseName, int port, String user, String password) {
     HOST = host;
@@ -32,28 +41,44 @@ public class SQLService {
     PASSWORD = password;
   }
 
-  private SQLService(){
-    try (OutputStream output = new FileOutputStream("sql.properties")) {
+  private final Map<String, String> propertiesMap = Map.of(
+    "sql.jdbc", "jdbc:mysql://",
+    "sql.server", "127.0.0.1",
+    "sql.database", "backpacks",
+    "sql.port", "3308",
+    "sql.user", "root",
+    "sql.password", ""
+  );
 
-      Properties prop = new Properties();
+  private SQLService(JavaPlugin javaPlugin){
+    PropertiesFile propertiesFile = new PropertiesFile(javaPlugin.getDataFolder().getPath(), "sql");
+    Properties prop = new Properties();
 
-      // set the properties value
-      prop.setProperty("sql.serverName", "127.0.0.1");
-      prop.setProperty("sql.databaseName", "database");
-      prop.setProperty("sql.portNumber", "3306");
-      prop.setProperty("sql.user", "elon");
-      prop.setProperty("sql.password", "musk");
+    try(FileInputStream inputStream = new FileInputStream(propertiesFile.getFile())) {
+      SynergyLogger.info("Found sql.properties file, loading properties...");
+      prop.load(inputStream);
 
-      // save properties to project root folder
-      prop.store(output, null);
-      SynergyLogger.info("SQL properties loaded.");
-    } catch (IOException io) {
-      io.printStackTrace();
+      JDBC_URL = prop.getProperty("sql.jdbc");
+      DATABASE_NAME = prop.getProperty("sql.database");
+      HOST = prop.getProperty("sql.server");
+      PORT = Integer.parseInt(prop.getProperty("sql.port"));
+      USERNAME = prop.getProperty("sql.user");
+      PASSWORD = prop.getProperty("sql.password");
+    }catch (Exception e){
+      SynergyLogger.info("sql.properties file not found, creating new file...");
+      try(OutputStream outputStream = new FileOutputStream(propertiesFile.getFile())) {
+        prop.putAll(propertiesMap);
+        prop.store(outputStream, "SQL Properties");
+      }catch (IOException ex){
+        ex.printStackTrace();
+      }
     }
+
+    properties = prop;
   }
 
-  public static SQLService fromProperties(){
-    return new SQLService();
+  public static SQLService fromProperties(JavaPlugin javaPlugin){
+    return new SQLService(javaPlugin);
   }
 
   public static SQLService fromFile(String file){
@@ -65,6 +90,7 @@ public class SQLService {
         "No SQL entry found in the given configuration file.");
 
     try {
+      JDBC_URL = fileConfiguration.getString("sql.jdbc");
       HOST = fileConfiguration.getString("sql.host");
       DATABASE_NAME = fileConfiguration.getString("sql.database");
       PORT = fileConfiguration.getInt("sql.port");
@@ -72,6 +98,17 @@ public class SQLService {
       PASSWORD = fileConfiguration.getString("sql.password");
     } catch (Exception exception) {
       exception.printStackTrace();
+    }
+  }
+
+  public void testConnection() throws SynergySQLException {
+    try (Connection connection = connection()) {
+      if (connection == null) {
+        throw new SynergySQLException("Connection is null.");
+      }
+      SynergyLogger.success("Connection to SQL was successful.");
+    } catch (Exception e) {
+      throw new SynergySQLException(e);
     }
   }
 
@@ -107,11 +144,11 @@ public class SQLService {
   }
 
   private static HikariConfig getConfig() {
-    String jdbcUrl = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DATABASE_NAME;
+    String jdbcUrl = JDBC_URL + HOST + ":" + PORT + "/" + DATABASE_NAME;
 
-    if (PROPERTIES_FILE_PATH != null){
-      return new HikariConfig("sql.properties");
-    }
+//    if (PROPERTIES_FILE_PATH != null && properties != null) {
+//      return new HikariConfig(properties);
+//    }
     HikariConfig hikariConfig = new HikariConfig();
 
     hikariConfig.setJdbcUrl(jdbcUrl);

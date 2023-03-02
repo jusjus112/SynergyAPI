@@ -19,6 +19,24 @@ public class UtilInventory {
     }
   }
 
+  public static GuiSize getForSlots(int slots) {
+    if (slots <= 9) {
+      return GuiSize.ONE_ROW;
+    } else if (slots <= 18) {
+      return GuiSize.TWO_ROWS;
+    } else if (slots <= 27) {
+      return GuiSize.THREE_ROWS;
+    } else if (slots <= 36) {
+      return GuiSize.FOUR_ROWS;
+    } else if (slots <= 45) {
+      return GuiSize.FIVE_ROWS;
+    } else if (slots <= 54) {
+      return GuiSize.SIX_ROWS;
+    } else {
+      return GuiSize.ONE_ROW;
+    }
+  }
+
   public static void surroundWith(Inventory inv, ItemStack item) {
     if (inv.getSize() >= GuiSize.THREE_ROWS.getSlots()) {
 

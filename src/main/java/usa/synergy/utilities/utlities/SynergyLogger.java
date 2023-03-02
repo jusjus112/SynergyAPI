@@ -3,15 +3,14 @@ package usa.synergy.utilities.utlities;
 import static org.bukkit.Bukkit.getServer;
 
 import java.util.Arrays;
+import java.util.logging.Level;
 import usa.synergy.utilities.assets.assets.LinuxColorCodes;
 
 public class SynergyLogger {
 
   public static void debug(String... messages){
-    String name = getServer().getLogger().getName();
-
-    Arrays.stream(messages).forEach(s -> System.out.println(
-        LinuxColorCodes.ANSI_RED+"[" + name + " DEBUG] "+LinuxColorCodes.ANSI_YELLOW+s+LinuxColorCodes.ANSI_RESET));
+//    Arrays.stream(messages).forEach(s -> getServer().getLogger().info(
+//        format("DEBUG", LinuxColorCodes.ANSI_CYAN, s)));
   }
 
   public static void info(String... messages){
@@ -28,11 +27,11 @@ public class SynergyLogger {
   }
 
   public static void error(String... messages){
-    Arrays.stream(messages).forEach(s -> System.out.println(format("error", LinuxColorCodes.ANSI_RED, s)));
+    Arrays.stream(messages).forEach(s -> getServer().getLogger().severe(format("error", LinuxColorCodes.ANSI_RED, s)));
   }
 
   public static void warn(String... messages){
-    Arrays.stream(messages).forEach(s -> System.out.println(format("warn", LinuxColorCodes.ANSI_RED, s)));
+    Arrays.stream(messages).forEach(s -> getServer().getLogger().warning(format("warn", LinuxColorCodes.ANSI_YELLOW, s)));
   }
 
   public static String format(String prefix, String color, String message){

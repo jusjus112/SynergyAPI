@@ -41,6 +41,12 @@ public abstract class GuiInteract {
     }
   }
 
+  public void add(Inventory inventory, Player player) {
+    for (Map.Entry<GuiInteractElement, Integer> element : elements.entrySet()) {
+      inventory.addItem(element.getKey().getIcon(player));
+    }
+  }
+
   public void addElement(GuiInteractElement menuElement, int slot) {
     if (slot >= 0) {
       if (!this.elements.containsValue(slot)) {
